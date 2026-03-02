@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -17,18 +17,17 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      background: #000;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       padding: 20px;
     }
 
     h1 {
-      color: #e94560;
+      color: #fff;
       font-size: clamp(2.5rem, 8vw, 5rem);
       letter-spacing: 0.15em;
       text-transform: uppercase;
       margin-bottom: 60px;
-      text-shadow: 0 0 20px rgba(233, 69, 96, 0.6), 0 0 40px rgba(233, 69, 96, 0.3);
     }
 
     .buttons {
@@ -40,8 +39,8 @@
     }
 
     .btn {
-      background: rgba(255, 255, 255, 0.05);
-      border: 2px solid rgba(255, 255, 255, 0.15);
+      background: #000;
+      border: 2px solid #fff;
       border-radius: 24px;
       padding: 28px 20px;
       cursor: pointer;
@@ -49,15 +48,14 @@
       flex-direction: column;
       align-items: center;
       gap: 12px;
-      transition: transform 0.1s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      transition: transform 0.1s ease, background 0.2s ease, box-shadow 0.2s ease;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
       outline: none;
     }
 
     .btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.08);
     }
 
     .btn:active,
@@ -77,21 +75,15 @@
     }
 
     .btn .label {
-      color: rgba(255, 255, 255, 0.75);
+      color: #fff;
       font-size: clamp(0.8rem, 2.5vw, 1rem);
       font-weight: 500;
       letter-spacing: 0.05em;
     }
 
-    /* Per-button accent colors */
-    .btn-choco  { --accent: #c0813e; }
-    .btn-yum    { --accent: #f0a500; }
-    .btn-kiss   { --accent: #e94560; }
-    .btn-heart  { --accent: #d63af9; }
-
     .btn.playing {
-      border-color: var(--accent);
-      box-shadow: 0 0 24px var(--accent), inset 0 0 24px rgba(255,255,255,0.04);
+      border-color: #fff;
+      box-shadow: 0 0 24px rgba(255,255,255,0.5), inset 0 0 24px rgba(255,255,255,0.04);
       background: rgba(255, 255, 255, 0.08);
     }
 
@@ -105,21 +97,21 @@
   <h1>Lizard</h1>
 
   <div class="buttons">
-    <button class="btn btn-choco" id="btn-choco" aria-label="チョコレート">
+    <button class="btn btn-choco" id="btn-choco" aria-label="Chocolate">
       <span class="emoji">🍫</span>
-      <span class="label">チョコ</span>
+      <span class="label">Choco</span>
     </button>
-    <button class="btn btn-yum" id="btn-yum" aria-label="おいしい">
+    <button class="btn btn-yum" id="btn-yum" aria-label="Yum">
       <span class="emoji">😋</span>
-      <span class="label">ヤム</span>
+      <span class="label">Yum</span>
     </button>
-    <button class="btn btn-kiss" id="btn-kiss" aria-label="キス">
+    <button class="btn btn-kiss" id="btn-kiss" aria-label="Kiss">
       <span class="emoji">💋</span>
-      <span class="label">キス</span>
+      <span class="label">Kiss</span>
     </button>
-    <button class="btn btn-heart" id="btn-heart" aria-label="ハート">
+    <button class="btn btn-heart" id="btn-heart" aria-label="Heart">
       <span class="emoji">💕</span>
-      <span class="label">ハート</span>
+      <span class="label">Heart</span>
     </button>
   </div>
 
@@ -295,11 +287,28 @@
       'btn-heart': playHeart,
     };
 
+    const speechLabels = {
+      'btn-choco': 'Chocolate',
+      'btn-yum':   'Yum',
+      'btn-kiss':  'Kiss',
+      'btn-heart': 'Heart',
+    };
+
+    function speak(text) {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'en-US';
+      window.speechSynthesis.speak(utter);
+    }
+
     document.querySelectorAll('.btn').forEach(btn => {
       const playFn = sounds[btn.id];
+      const label = speechLabels[btn.id];
 
       function handlePlay() {
         playFn();
+        speak(label);
         btn.classList.add('playing');
         setTimeout(() => btn.classList.remove('playing'), 300);
       }
