@@ -22,6 +22,15 @@
       padding: 20px;
     }
 
+    .screen {
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
     h1 {
       color: #fff;
       font-size: clamp(2.5rem, 8vw, 5rem);
@@ -101,35 +110,136 @@
       .buttons { gap: 16px; }
       .btn { padding: 20px 12px; border-radius: 18px; }
     }
+
+    .btn-start-game {
+      position: fixed;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+      margin: 0 auto;
+      width: calc(100% - 40px);
+      max-width: 480px;
+      background: #ff2f2f;
+      border: 0;
+      color: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .game-screen {
+      color: #fff;
+      text-align: center;
+    }
+
+    .game-screen h2 {
+      font-size: clamp(1.8rem, 6vw, 2.4rem);
+      margin-bottom: 16px;
+    }
+
+    .game-info {
+      margin-bottom: 16px;
+      color: #ddd;
+      font-size: 0.95rem;
+    }
+
+    .game-display {
+      min-height: 88px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-size: 3.2rem;
+    }
+
+    .game-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .game-btn {
+      border: 2px solid #fff;
+      border-radius: 16px;
+      background: #000;
+      color: #fff;
+      font-size: 2.4rem;
+      padding: 24px 12px;
+      cursor: pointer;
+    }
+
+    .game-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .game-result {
+      margin-top: 4px;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+
+    .btn-restart {
+      border: 0;
+      border-radius: 12px;
+      background: #fff;
+      color: #000;
+      padding: 10px 18px;
+      font-weight: 700;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-  <h1>Lizard</h1>
+  <div id="home-screen" class="screen">
+    <h1>Lizard</h1>
 
-  <div class="btn-lizard-wrap">
-    <button class="btn btn-lizard" id="btn-lizard" aria-label="Lizard">
-      <span class="emoji">🦎</span>
-      <span class="label">Lizard</span>
-    </button>
+    <div class="btn-lizard-wrap">
+      <button class="btn btn-lizard" id="btn-lizard" aria-label="Lizard">
+        <span class="emoji">🦎</span>
+        <span class="label">Lizard</span>
+      </button>
+    </div>
+
+    <div class="buttons">
+      <button class="btn btn-choco" id="btn-choco" aria-label="Chocolate">
+        <span class="emoji">🍫</span>
+        <span class="label">Choco</span>
+      </button>
+      <button class="btn btn-yum" id="btn-yum" aria-label="Yum">
+        <span class="emoji">😋</span>
+        <span class="label">Yum</span>
+      </button>
+      <button class="btn btn-kiss" id="btn-kiss" aria-label="Kiss">
+        <span class="emoji">💋</span>
+        <span class="label">Kiss</span>
+      </button>
+      <button class="btn btn-heart" id="btn-heart" aria-label="Heart">
+        <span class="emoji">💕</span>
+        <span class="label">Heart</span>
+      </button>
+    </div>
   </div>
 
-  <div class="buttons">
-    <button class="btn btn-choco" id="btn-choco" aria-label="Chocolate">
-      <span class="emoji">🍫</span>
-      <span class="label">Choco</span>
-    </button>
-    <button class="btn btn-yum" id="btn-yum" aria-label="Yum">
-      <span class="emoji">😋</span>
-      <span class="label">Yum</span>
-    </button>
-    <button class="btn btn-kiss" id="btn-kiss" aria-label="Kiss">
-      <span class="emoji">💋</span>
-      <span class="label">Kiss</span>
-    </button>
-    <button class="btn btn-heart" id="btn-heart" aria-label="Heart">
-      <span class="emoji">💕</span>
-      <span class="label">Heart</span>
-    </button>
+  <button id="start-game-btn" class="btn-start-game">Start the game🦎</button>
+
+  <div id="game-screen" class="screen game-screen hidden">
+    <h2>Memory Game</h2>
+    <div class="game-info" id="game-info">Round: 0 / High score: 0</div>
+    <div class="game-display" id="game-display">🧠</div>
+    <div class="game-buttons">
+      <button class="game-btn" data-key="choco" aria-label="Chocolate">🍫</button>
+      <button class="game-btn" data-key="yum" aria-label="Yum">😋</button>
+      <button class="game-btn" data-key="kiss" aria-label="Kiss">💋</button>
+      <button class="game-btn" data-key="heart" aria-label="Heart">💕</button>
+    </div>
+    <div class="game-result hidden" id="game-result">
+      <p id="game-result-text"></p>
+      <button class="btn-restart" id="restart-game-btn">Play again</button>
+    </div>
   </div>
 
   <script>
@@ -387,6 +497,114 @@
         }
       }, { passive: false });
     });
+
+    const gameItems = [
+      { key: 'choco', emoji: '🍫', play: playChoco, label: 'Chocolate' },
+      { key: 'yum', emoji: '😋', play: playYum, label: 'Yum' },
+      { key: 'kiss', emoji: '💋', play: playKiss, label: 'Kiss' },
+      { key: 'heart', emoji: '💕', play: playHeart, label: 'Heart' },
+    ];
+
+    const homeScreen = document.getElementById('home-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const startGameBtn = document.getElementById('start-game-btn');
+    const gameInfo = document.getElementById('game-info');
+    const gameDisplay = document.getElementById('game-display');
+    const gameResult = document.getElementById('game-result');
+    const gameResultText = document.getElementById('game-result-text');
+    const restartGameBtn = document.getElementById('restart-game-btn');
+    const gameButtons = Array.from(document.querySelectorAll('.game-btn'));
+    let sequence = [];
+    let inputIndex = 0;
+    let score = 0;
+    let highScore = Number(localStorage.getItem('memory-high-score') || 0);
+
+    function setGameButtonsEnabled(enabled) {
+      gameButtons.forEach(button => {
+        button.disabled = !enabled;
+      });
+    }
+
+    function updateInfo() {
+      gameInfo.textContent = `Round: ${score} / High score: ${highScore}`;
+    }
+
+    function wait(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function playSequence() {
+      setGameButtonsEnabled(false);
+      gameDisplay.textContent = '👀';
+      await wait(500);
+      for (const key of sequence) {
+        const item = gameItems.find(i => i.key === key);
+        gameDisplay.textContent = item.emoji;
+        item.play();
+        speak(item.label);
+        await wait(900);
+        gameDisplay.textContent = '';
+        await wait(250);
+      }
+      gameDisplay.textContent = 'Tap!';
+      inputIndex = 0;
+      setGameButtonsEnabled(true);
+    }
+
+    function startRound() {
+      const randomItem = gameItems[Math.floor(Math.random() * gameItems.length)];
+      sequence.push(randomItem.key);
+      playSequence();
+    }
+
+    function finishGame() {
+      setGameButtonsEnabled(false);
+      gameDisplay.textContent = '💥';
+      gameResultText.textContent = `Score: ${score} / High score: ${highScore}`;
+      gameResult.classList.remove('hidden');
+    }
+
+    function startGame() {
+      sequence = [];
+      inputIndex = 0;
+      score = 0;
+      updateInfo();
+      gameResult.classList.add('hidden');
+      homeScreen.classList.add('hidden');
+      startGameBtn.classList.add('hidden');
+      gameScreen.classList.remove('hidden');
+      startRound();
+    }
+
+    startGameBtn.addEventListener('click', startGame);
+    restartGameBtn.addEventListener('click', startGame);
+
+    gameButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const key = button.dataset.key;
+        const item = gameItems.find(i => i.key === key);
+        item.play();
+        speak(item.label);
+        if (sequence[inputIndex] !== key) {
+          finishGame();
+          return;
+        }
+        inputIndex += 1;
+        if (inputIndex === sequence.length) {
+          score += 1;
+          if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('memory-high-score', String(highScore));
+          }
+          updateInfo();
+          setGameButtonsEnabled(false);
+          gameDisplay.textContent = '✅';
+          setTimeout(startRound, 700);
+        }
+      });
+    });
+
+    updateInfo();
   </script>
 </body>
 </html>
