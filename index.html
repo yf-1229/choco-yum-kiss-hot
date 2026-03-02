@@ -251,11 +251,45 @@
       'btn-heart': 'Heart',
     };
 
+    let currentSpeakingText = null;
+    let lastSpeakTime = 0;
+    const QUICK_PRESS_MS = 600;
+    let speakSeq = 0;
+
     function speak(text) {
       if (!window.speechSynthesis) return;
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = 'en-US';
-      window.speechSynthesis.speak(utter);
+
+      const now = Date.now();
+      const isSpeaking = window.speechSynthesis.speaking;
+      const isQuick = (now - lastSpeakTime) < QUICK_PRESS_MS;
+      lastSpeakTime = now;
+      const seq = ++speakSeq;
+
+      if (isSpeaking && isQuick && currentSpeakingText) {
+        const prevText = currentSpeakingText;
+        window.speechSynthesis.cancel();
+
+        const fastUtter = new SpeechSynthesisUtterance(prevText);
+        fastUtter.lang = 'en-US';
+        fastUtter.rate = 2;
+        fastUtter.onend = () => {
+          if (speakSeq !== seq) return;
+          const nextUtter = new SpeechSynthesisUtterance(text);
+          nextUtter.lang = 'en-US';
+          nextUtter.onstart = () => { if (speakSeq === seq) currentSpeakingText = text; };
+          nextUtter.onend = () => { if (speakSeq === seq) currentSpeakingText = null; };
+          if (speakSeq !== seq) return;
+          window.speechSynthesis.speak(nextUtter);
+        };
+        currentSpeakingText = prevText;
+        window.speechSynthesis.speak(fastUtter);
+      } else {
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'en-US';
+        utter.onstart = () => { if (speakSeq === seq) currentSpeakingText = text; };
+        utter.onend = () => { if (speakSeq === seq) currentSpeakingText = null; };
+        window.speechSynthesis.speak(utter);
+      }
     }
 
     document.querySelectorAll('.btn').forEach(btn => {
