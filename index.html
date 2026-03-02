@@ -209,9 +209,9 @@
         <span class="emoji">🍫</span>
         <span class="label">Choco</span>
       </button>
-      <button class="btn btn-yum" id="btn-yum" aria-label="Yum">
+      <button class="btn btn-yum" id="btn-yum" aria-label="Yummy">
         <span class="emoji">😋</span>
-        <span class="label">Yum</span>
+        <span class="label">Yummy</span>
       </button>
       <button class="btn btn-kiss" id="btn-kiss" aria-label="Kiss">
         <span class="emoji">💋</span>
@@ -232,7 +232,7 @@
     <div class="game-display" id="game-display">🧠</div>
     <div class="game-buttons">
       <button class="game-btn" data-key="choco" aria-label="Chocolate">🍫</button>
-      <button class="game-btn" data-key="yum" aria-label="Yum">😋</button>
+      <button class="game-btn" data-key="yum" aria-label="Yummy">😋</button>
       <button class="game-btn" data-key="kiss" aria-label="Kiss">💋</button>
       <button class="game-btn" data-key="heart" aria-label="Heart">💕</button>
     </div>
@@ -243,225 +243,10 @@
   </div>
 
   <script>
-    // Web Audio API sound engine
-    let audioCtx = null;
-
-    function getCtx() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      // Resume in case it was suspended (autoplay policy)
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-      return audioCtx;
-    }
-
-    function createGain(ctx, volume, attackTime, releaseTime, totalTime) {
-      const gain = ctx.createGain();
-      const now = ctx.currentTime;
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(volume, now + attackTime);
-      gain.gain.setValueAtTime(volume, now + totalTime - releaseTime);
-      gain.gain.linearRampToValueAtTime(0, now + totalTime);
-      return gain;
-    }
-
-    // 🦎 Lizard – quick reptilian rattle with a descending glide
-    function playLizard() {
-      const ctx = getCtx();
-      const now = ctx.currentTime;
-      const duration = 0.9;
-
-      // Buzzy sawtooth glide
-      const osc = ctx.createOscillator();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(600, now);
-      osc.frequency.exponentialRampToValueAtTime(120, now + duration);
-
-      // Noise layer for a scaly texture
-      const bufSize = ctx.sampleRate * duration;
-      const buffer = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufSize; i++) {
-        data[i] = (Math.random() * 2 - 1);
-      }
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(800, now);
-      filter.frequency.exponentialRampToValueAtTime(200, now + duration);
-      filter.Q.value = 3;
-
-      const oscGain = createGain(ctx, 0.35, 0.01, 0.3, duration);
-      const noiseGain = createGain(ctx, 0.15, 0.01, 0.2, duration);
-
-      osc.connect(oscGain);
-      noise.connect(filter);
-      filter.connect(noiseGain);
-      oscGain.connect(ctx.destination);
-      noiseGain.connect(ctx.destination);
-
-      osc.start(now);
-      noise.start(now);
-      osc.stop(now + duration);
-      noise.stop(now + duration);
-    }
-
-    // 🍫 Chocolate – warm, rich low oscillator with a gentle vibrato
-    function playChoco() {
-      const ctx = getCtx();
-      const now = ctx.currentTime;
-      const duration = 1.2;
-
-      const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(130, now);
-      osc.frequency.exponentialRampToValueAtTime(110, now + duration);
-
-      // Sub-bass
-      const osc2 = ctx.createOscillator();
-      osc2.type = 'triangle';
-      osc2.frequency.setValueAtTime(260, now);
-      osc2.frequency.exponentialRampToValueAtTime(220, now + duration);
-
-      const gain = createGain(ctx, 0.5, 0.04, 0.4, duration);
-      const gain2 = createGain(ctx, 0.25, 0.04, 0.4, duration);
-
-      osc.connect(gain);
-      osc2.connect(gain2);
-      gain.connect(ctx.destination);
-      gain2.connect(ctx.destination);
-
-      osc.start(now);
-      osc2.start(now);
-      osc.stop(now + duration);
-      osc2.stop(now + duration);
-    }
-
-    // 😋 Yum – bright, happy ascending arpeggio
-    function playYum() {
-      const ctx = getCtx();
-      const now = ctx.currentTime;
-      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-      const noteDur = 0.18;
-
-      notes.forEach((freq, i) => {
-        const osc = ctx.createOscillator();
-        osc.type = 'triangle';
-        osc.frequency.value = freq;
-
-        const gain = ctx.createGain();
-        const t = now + i * noteDur;
-        gain.gain.setValueAtTime(0, t);
-        gain.gain.linearRampToValueAtTime(0.4, t + 0.02);
-        gain.gain.setValueAtTime(0.4, t + noteDur * 0.6);
-        gain.gain.linearRampToValueAtTime(0, t + noteDur);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(t);
-        osc.stop(t + noteDur);
-      });
-    }
-
-    // 💋 Kiss – percussive "smack" using filtered noise + pitched tone
-    function playKiss() {
-      const ctx = getCtx();
-      const now = ctx.currentTime;
-
-      // White noise burst
-      const bufSize = ctx.sampleRate * 0.12;
-      const buffer = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufSize; i++) {
-        data[i] = (Math.random() * 2 - 1);
-      }
-
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(1200, now);
-      filter.frequency.exponentialRampToValueAtTime(400, now + 0.12);
-      filter.Q.value = 1.5;
-
-      const noiseGain = ctx.createGain();
-      noiseGain.gain.setValueAtTime(0.8, now);
-      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-
-      noise.connect(filter);
-      filter.connect(noiseGain);
-      noiseGain.connect(ctx.destination);
-
-      // Pitch "smack"
-      const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(800, now);
-      osc.frequency.exponentialRampToValueAtTime(200, now + 0.1);
-
-      const oscGain = ctx.createGain();
-      oscGain.gain.setValueAtTime(0.5, now);
-      oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-
-      osc.connect(oscGain);
-      oscGain.connect(ctx.destination);
-
-      noise.start(now);
-      osc.start(now);
-      osc.stop(now + 0.15);
-    }
-
-    // 💕 Heart – gentle, romantic chime chord
-    function playHeart() {
-      const ctx = getCtx();
-      const now = ctx.currentTime;
-      const chord = [523.25, 659.25, 783.99]; // C5, E5, G5
-      const duration = 1.8;
-
-      chord.forEach((freq, i) => {
-        const osc = ctx.createOscillator();
-        osc.type = 'sine';
-        osc.frequency.value = freq;
-
-        // Add slight detuning for warmth
-        const osc2 = ctx.createOscillator();
-        osc2.type = 'sine';
-        osc2.frequency.value = freq * 1.003;
-
-        const gain = createGain(ctx, 0.22, 0.01, 0.8, duration);
-        const gain2 = createGain(ctx, 0.12, 0.01, 0.8, duration);
-
-        // Slight stagger
-        const t = now + i * 0.06;
-
-        osc.connect(gain);
-        osc2.connect(gain2);
-        gain.connect(ctx.destination);
-        gain2.connect(ctx.destination);
-
-        osc.start(t);
-        osc2.start(t);
-        osc.stop(t + duration);
-        osc2.stop(t + duration);
-      });
-    }
-
-    const sounds = {
-      'btn-lizard': playLizard,
-      'btn-choco': playChoco,
-      'btn-yum':   playYum,
-      'btn-kiss':  playKiss,
-      'btn-heart': playHeart,
-    };
-
     const speechLabels = {
       'btn-lizard': 'Lizard',
       'btn-choco': 'Chocolate',
-      'btn-yum':   'Yum',
+      'btn-yum':   'Yummy',
       'btn-kiss':  'Kiss',
       'btn-heart': 'Heart',
     };
@@ -475,11 +260,9 @@
     }
 
     document.querySelectorAll('.btn').forEach(btn => {
-      const playFn = sounds[btn.id];
       const label = speechLabels[btn.id];
 
       function handlePlay() {
-        playFn();
         speak(label);
         btn.classList.add('playing');
         setTimeout(() => btn.classList.remove('playing'), 300);
@@ -499,10 +282,10 @@
     });
 
     const gameItems = [
-      { key: 'choco', emoji: '🍫', play: playChoco, label: 'Chocolate' },
-      { key: 'yum', emoji: '😋', play: playYum, label: 'Yum' },
-      { key: 'kiss', emoji: '💋', play: playKiss, label: 'Kiss' },
-      { key: 'heart', emoji: '💕', play: playHeart, label: 'Heart' },
+      { key: 'choco', emoji: '🍫', label: 'Chocolate' },
+      { key: 'yum', emoji: '😋', label: 'Yummy' },
+      { key: 'kiss', emoji: '💋', label: 'Kiss' },
+      { key: 'heart', emoji: '💕', label: 'Heart' },
     ];
 
     const homeScreen = document.getElementById('home-screen');
@@ -541,7 +324,6 @@
       for (const key of sequence) {
         const item = gameItems.find(i => i.key === key);
         gameDisplay.textContent = item.emoji;
-        item.play();
         speak(item.label);
         await wait(900);
         gameDisplay.textContent = '';
@@ -585,7 +367,6 @@
       button.addEventListener('click', () => {
         const key = button.dataset.key;
         const item = gameItems.find(i => i.key === key);
-        item.play();
         speak(item.label);
         if (sequence[inputIndex] !== key) {
           finishGame();
