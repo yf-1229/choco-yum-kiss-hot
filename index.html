@@ -224,7 +224,7 @@
     </div>
   </div>
 
-  <button id="start-game-btn" class="btn-start-game">Start the game🦎</button>
+  <button id="start-game-btn" class="btn-start-game" aria-label="Start the memory game">Start the game🦎</button>
 
   <div id="game-screen" class="screen game-screen hidden">
     <h2>Memory Game</h2>
@@ -517,7 +517,8 @@
     let sequence = [];
     let inputIndex = 0;
     let score = 0;
-    let highScore = Number(localStorage.getItem('memory-high-score') || 0);
+    const storedHighScore = Number(localStorage.getItem('memory-high-score'));
+    let highScore = Number.isFinite(storedHighScore) && storedHighScore > 0 ? storedHighScore : 0;
 
     function setGameButtonsEnabled(enabled) {
       gameButtons.forEach(button => {
@@ -526,7 +527,7 @@
     }
 
     function updateInfo() {
-      gameInfo.textContent = `Round: ${score} / High score: ${highScore}`;
+      gameInfo.textContent = `Round: ${sequence.length} / High score: ${highScore}`;
     }
 
     function wait(ms) {
@@ -551,10 +552,11 @@
       setGameButtonsEnabled(true);
     }
 
-    function startRound() {
+    async function startRound() {
       const randomItem = gameItems[Math.floor(Math.random() * gameItems.length)];
       sequence.push(randomItem.key);
-      playSequence();
+      updateInfo();
+      await playSequence();
     }
 
     function finishGame() {
