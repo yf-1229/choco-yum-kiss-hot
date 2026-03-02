@@ -30,6 +30,16 @@
       margin-bottom: 60px;
     }
 
+    .btn-lizard-wrap {
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 32px;
+    }
+
+    .btn-lizard-wrap .btn {
+      width: 100%;
+    }
+
     .buttons {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -96,6 +106,13 @@
 <body>
   <h1>Lizard</h1>
 
+  <div class="btn-lizard-wrap">
+    <button class="btn btn-lizard" id="btn-lizard" aria-label="Lizard">
+      <span class="emoji">🦎</span>
+      <span class="label">Lizard</span>
+    </button>
+  </div>
+
   <div class="buttons">
     <button class="btn btn-choco" id="btn-choco" aria-label="Chocolate">
       <span class="emoji">🍫</span>
@@ -138,6 +155,49 @@
       gain.gain.setValueAtTime(volume, now + totalTime - releaseTime);
       gain.gain.linearRampToValueAtTime(0, now + totalTime);
       return gain;
+    }
+
+    // 🦎 Lizard – quick reptilian rattle with a descending glide
+    function playLizard() {
+      const ctx = getCtx();
+      const now = ctx.currentTime;
+      const duration = 0.9;
+
+      // Buzzy sawtooth glide
+      const osc = ctx.createOscillator();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(600, now);
+      osc.frequency.exponentialRampToValueAtTime(120, now + duration);
+
+      // Noise layer for a scaly texture
+      const bufSize = ctx.sampleRate * duration;
+      const buffer = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufSize; i++) {
+        data[i] = (Math.random() * 2 - 1);
+      }
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(800, now);
+      filter.frequency.exponentialRampToValueAtTime(200, now + duration);
+      filter.Q.value = 3;
+
+      const oscGain = createGain(ctx, 0.35, 0.01, 0.3, duration);
+      const noiseGain = createGain(ctx, 0.15, 0.01, 0.2, duration);
+
+      osc.connect(oscGain);
+      noise.connect(filter);
+      filter.connect(noiseGain);
+      oscGain.connect(ctx.destination);
+      noiseGain.connect(ctx.destination);
+
+      osc.start(now);
+      noise.start(now);
+      osc.stop(now + duration);
+      noise.stop(now + duration);
     }
 
     // 🍫 Chocolate – warm, rich low oscillator with a gentle vibrato
@@ -281,6 +341,7 @@
     }
 
     const sounds = {
+      'btn-lizard': playLizard,
       'btn-choco': playChoco,
       'btn-yum':   playYum,
       'btn-kiss':  playKiss,
@@ -288,6 +349,7 @@
     };
 
     const speechLabels = {
+      'btn-lizard': 'Lizard',
       'btn-choco': 'Chocolate',
       'btn-yum':   'Yum',
       'btn-kiss':  'Kiss',
